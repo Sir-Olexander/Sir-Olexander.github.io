@@ -24,10 +24,13 @@ If a page must move, leave a small page at the old address that redirects to the
 1. Copy `research/weight-space-programming-claude/index.html` into a new folder `research/<new-slug>/index.html`
    and replace the article.
 2. Add an entry to the top of the lists in `research/index.html` and `index.html`.
+3. Add the new address to `sitemap.xml` (and update `lastmod` on pages you change).
 
 ## Files
 
 - `assets/site.css`: all styles (same visual language as the portfolio).
 - `assets/site.js`: mobile menu only.
 - `404.html`: shown for unknown addresses.
+- `sitemap.xml`, `robots.txt`: for search engines; the sitemap lists every page.
+- `google782bfac6b76f2a67.html`: Google Search Console verification. Keep it.
 - `.nojekyll`: tells GitHub Pages to serve the files as they are.
