@@ -10,8 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".theme-btn").forEach(b => b.addEventListener("click", () => {
     const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
     document.documentElement.dataset.theme = next;
+    document.querySelectorAll(".theme-btn").forEach(x => x.setAttribute("aria-checked", String(next === "dark")));
     try { localStorage.setItem("theme", next); } catch (e) {}
   }));
+  document.querySelectorAll(".theme-btn").forEach(x =>
+    x.setAttribute("aria-checked", String(document.documentElement.dataset.theme !== "light")));
   const y = document.getElementById("year");
   if (y) y.textContent = new Date().getFullYear();
 });
