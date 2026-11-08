@@ -95,7 +95,7 @@ th{font-family:"Geist Mono",monospace;font-weight:400;font-size:12px;letter-spac
 td{color:#cfcfd4}
 tr:last-child td{border-bottom:none}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-td .win{color:var(--accent)}
+td .win,td.win{color:var(--accent)}
 .cap{font-size:13px;color:var(--dim);margin-top:10px}
 
 /* table of contents */
@@ -124,3 +124,38 @@ td .win{color:var(--accent)}
   .entry .arrow{display:none}
   .toc ol{columns:1}
 }
+
+/* ---------- light theme ----------
+   Chosen by the toggle (saved in localStorage) or, if never toggled, by the system setting.
+   The <html data-theme> attribute is set before the page renders (inline script in <head>). */
+.theme-btn{background:none;border:none;color:inherit;cursor:pointer;padding:0;display:inline-flex}
+.theme-btn .sun{display:none}
+[data-theme=light] .theme-btn .sun{display:block}
+[data-theme=light] .theme-btn .moon{display:none}
+.topbar-right{display:flex;align-items:center;gap:12px}
+[data-theme=light]{
+  --bg:#fafaf9; --panel:#ffffff; --line:#e7e5e4; --line2:#d6d3d1;
+  --text:#1c1917; --muted:#57534e; --dim:#78716c; --white:#0c0a09;
+  --accent:#15803d; --accent-dim:rgba(21,128,61,.10);
+}
+[data-theme=light] body{color:var(--text)}
+[data-theme=light] code{background:#f1f0ee;border-color:var(--line2);color:#292524}
+[data-theme=light] .nav a{color:#44403c}
+[data-theme=light] .nav a:hover{background:#f1f0ee}
+[data-theme=light] .nav a.active{background:#ebe9e6}
+[data-theme=light] .glow{background:radial-gradient(circle at 0 0,rgba(21,128,61,.08),transparent 70%)}
+[data-theme=light] .hero-tag{color:#57534e}
+[data-theme=light] .btn{background:#fff}
+[data-theme=light] .btn:hover{background:#f5f5f4;border-color:#a8a29e}
+[data-theme=light] .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme=light] .btn.primary:hover{background:#166534}
+[data-theme=light] .tags span{background:#fff;color:#44403c}
+[data-theme=light] .tldr{border-color:rgba(21,128,61,.25);background:rgba(21,128,61,.05)}
+[data-theme=light] .tldr p,[data-theme=light] .tldr li{color:#292524}
+[data-theme=light] .prose p,[data-theme=light] .prose ul,[data-theme=light] .prose ol{color:#292524}
+[data-theme=light] .prose a,[data-theme=light] .link{border-bottom-color:rgba(21,128,61,.35)}
+[data-theme=light] .prose pre,[data-theme=light] .note,[data-theme=light] th{background:#f5f5f4}
+[data-theme=light] td{color:#292524}
+[data-theme=light] .toc a{color:#44403c}
+[data-theme=light] .topbar{background:rgba(250,250,249,.9)}
+[data-theme=light] .menu-btn{color:var(--text)}
