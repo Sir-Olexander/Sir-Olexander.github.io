@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Do the sparks transfer? Replicating weight-space programming with Claude Opus 5.5</title>
+<meta name="description" content="A validated replication of Sparks of Weight-Space Programming with Claude Opus 5.5: what carried over, what didn't, and where the CLI changed the outcome.">
+<meta property="og:title" content="Do the sparks transfer? Replicating weight-space programming with Claude Opus 5.5">
+<meta property="og:description" content="A validated replication of Sparks of Weight-Space Programming with Claude Opus 5.5: what carried over, what didn't, and where the CLI changed the outcome.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/site.js" defer></script>
+</head>
+<body>
+<aside class="sidebar">
+  <div>
+    <a class="brand" href="/">Alex<span>-</span>Labs</a>
+    <p class="brand-sub mono">Research &amp; notes</p>
+  </div>
+  <nav class="nav"><a href="/"><svg viewBox="0 0 24 24"><path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a><a href="/research/" class="active"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3M7.5 15h9"/></svg>Research</a><a href="/about/"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>About</a></nav>
+  <div class="side-foot">
+    <a href="https://github.com/Sir-Olexander" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M9 19c-4 1.5-4-2-6-2.5m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></a>
+    <a href="mailto:alexandrebelostecinic@gmail.com" aria-label="Email"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
+  </div>
+</aside>
+<header class="topbar">
+  <a class="brand" href="/">Alex<span>-</span>Labs</a>
+  <button class="menu-btn" aria-label="Menu" aria-expanded="false">☰</button>
+</header>
+<main>
+  <div class="wrap"><article class="article">
+  <p class="eyebrow mono">Research · Replication</p>
+  <h1>Do the sparks transfer? Replicating weight-space programming with Claude Opus 5.5</h1>
+  <p class="lead">A frontier LLM was recently shown reading and writing neural-network weights directly, with no gradient descent. I re-ran seven of the eight experiments with a model from a different family, using the original prompts and a harness checked against the original logs. Some abilities carried over; others did not. Some results also depended on the CLI the model ran in.</p>
+  <div class="article-meta mono">
+    <span><b>Alexandre Belostecinic</b></span>
+    <span>8 November 2026</span>
+    <span>Model: Claude Opus 5.5</span>
+    <span>Replicates: Takehi, Teoh, Zhang &amp; Khattab (2026)</span>
+  </div>
+
+  <div class="tldr">
+    <p class="k mono">IN SHORT</p>
+    <ul>
+      <li><strong>Matched the original</strong> on reading simple networks (4/4 games, 3/3 shapes) and on repairing a failing policy (1,024/1,024 successes).</li>
+      <li><strong>Beat the original</strong> on writing a Go network with no feedback (65.6 % vs 37.5 % against the same opponents) and on spotting a sycophantic model with attention access (Brier score 0.001 vs 0.071).</li>
+      <li><strong>Fell short</strong> on naming a language model's training text (6/12 vs 6/6), on two of three Atari-style games, and on improving with game feedback.</li>
+      <li><strong>The CLI mattered.</strong> Six replies hit the 128k output limit and were continued by the CLI on its own. Two conversations failed for reasons tied to the CLI.</li>
+    </ul>
+  </div>
+
+  <nav class="toc" aria-label="Contents">
+    <p class="k mono">CONTENTS</p>
+    <ol>
+      <li><a href="#why"><span class="n">01</span>Why replicate it</a></li>
+      <li><a href="#setup"><span class="n">02</span>Setup</a></li>
+      <li><a href="#validation"><span class="n">03</span>Checking the harness first</a></li>
+      <li><a href="#results"><span class="n">04</span>Results</a></li>
+      <li><a href="#harness"><span class="n">05</span>When the harness changes the outcome</a></li>
+      <li><a href="#meaning"><span class="n">06</span>What it suggests</a></li>
+      <li><a href="#limits"><span class="n">07</span>Limitations</a></li>
+      <li><a href="#data"><span class="n">08</span>Data, code and citation</a></li>
+    </ol>
+  </nav>
+
+  <div class="prose">
+    <h2 id="why"><span class="n">01</span>Why replicate it</h2>
+    <p>In <a href="https://rikiyat.github.io/blog/weight-space-programming/" target="_blank" rel="noopener"><em>Sparks of Weight-Space Programming</em></a> (2 November 2026), Rikiya Takehi, Jayden Teoh, Alex Zhang and Omar Khattab (MIT CSAIL) showed GPT-6 Astra working directly in weight space. It named the game a policy was trained on, fixed a failing robot-car policy by editing weights in one reply, wrote a 1.5-million-weight Go network from scratch, and found a sycophantic fine-tune from its internals. All of this was done by reasoning, with no optimiser.</p>
+    <p>These are striking claims, and they rest on one model with mostly one run per condition. The authors also <a href="https://github.com/RikiyaT/lm_understand-logs" target="_blank" rel="noopener">released their complete logs</a>: every prompt, every reply, every code run and every network. That makes a close replication possible. The obvious question is whether these abilities belong to that one model, or whether another frontier model shows them too.</p>
+
+    <h2 id="setup"><span class="n">02</span>Setup</h2>
+    <p>I kept everything I could identical and recorded everything I could not.</p>
+    <ul>
+      <li><strong>Same prompts, byte for byte</strong>, from the original logs. They never name the model, so they transfer directly.</li>
+      <li><strong>Same instructions:</strong> the one-line system prompt <code>Answer the user's request.</code>, with no tools of any kind.</li>
+      <li><strong>Same effort levels per experiment:</strong> <code>high</code> for experiments 1, 2 and 4, <code>xhigh</code> for 3, 5, 6 and 7. The labels match, but effort scales are not calibrated across vendors, so "high" on Claude is not the same amount of thinking as "high" on GPT.</li>
+      <li><strong>Same sandbox:</strong> where code was allowed, the model wrote one Python block per turn. The block ran in the original's isolated sandbox, with no network and no view of the answer keys.</li>
+      <li><strong>Different model and interface:</strong> Claude Opus 5.5 through the Claude Code CLI with all tools off, one process per turn. The original used Astra through the Codex CLI.</li>
+    </ul>
+    <p>Experiment 8, which edits Qwen3.5-0.8B to improve its math, was out of scope.</p>
+
+    <h2 id="validation"><span class="n">03</span>Checking the harness first</h2>
+    <p>A replication is only as good as its harness. Before any Claude run, I replayed Astra's recorded answers through my harness and scorers, and checked that I got the original numbers back.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Exp</th><th>Replaying Astra's answers through this harness</th></tr></thead>
+      <tbody>
+        <tr><td>1, 2</td><td>Scores identical to the original (4/4 and 3/3, same confidences)</td></tr>
+        <tr><td>3</td><td>Scores identical, including all 144 head labels; 48 code runs replayed in the sandbox</td></tr>
+        <tr><td>4</td><td>The edited network rebuilds bit for bit; 1,024/1,024 successes, as in the original</td></tr>
+        <tr><td>5</td><td>The networks rebuild exactly; scores within sampling error (largest gap 1.5 SE)</td></tr>
+        <tr><td>6</td><td>All four Go networks rebuild bit for bit; head-to-head results within sampling error</td></tr>
+        <tr><td>7</td><td>Exactly the original sequence of 322 messages; scores identical</td></tr>
+      </tbody>
+    </table></div>
+    <p>Three components were never released, so I rebuilt them:</p>
+    <ul>
+      <li><strong>The Go opponents.</strong> I retrained them and calibrated them only against networks the original released. They are on average 5.7 points stronger than the originals, so all Go comparisons below re-score Astra's released networks against <em>my</em> opponents.</li>
+      <li><strong>The six fine-tuned Gemma models</strong> for the sycophancy test. I retrained them with the original scripts; their loss curves and behaviour match the originals.</li>
+      <li><strong>The attention tool.</strong> My reimplementation gives byte-identical outputs on all 14 recorded calls.</li>
+    </ul>
+
+    <h2 id="results"><span class="n">04</span>Results</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Exp</th><th>Task</th><th>Claude Opus 5.5</th><th>GPT-6 Astra</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Name the game a policy plays</td><td>4/4</td><td>4/4</td></tr>
+        <tr><td>2</td><td>Name the shape a diffusion model draws</td><td>3/3</td><td>3/3</td></tr>
+        <tr><td>3</td><td>Name a language model's training text</td><td>6/12</td><td class="win">6/6</td></tr>
+        <tr><td>4</td><td>Repair a failing car policy in one reply</td><td>1,024/1,024</td><td>1,024/1,024</td></tr>
+        <tr><td>5</td><td>Write Atari-style game policies</td><td>1 of 3 games better</td><td class="win">2 of 3 games better</td></tr>
+        <tr><td>6</td><td>Write a Go network (no feedback / most feedback)</td><td><span class="win">65.6 %</span> / 58.1 %</td><td>37.5 % / <span class="win">78.4 %</span></td></tr>
+        <tr><td>7</td><td>Find the sycophantic model, with attention access</td><td class="win">3/3, Brier 0.001</td><td>3/3, Brier 0.071</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Reading networks (experiments 1, 2 and 3)</h3>
+    <p>Given a policy's 17,253 weights as text, Opus named the game in 4 of 4 cases. Given a small diffusion model's weights, it named the shape in 3 of 3, the same as Astra. It was less confident: 72–80 % against Astra's 96–99 %. One detail stood out. The original post notes that Astra drew every shape as an outline, though the models generate filled shapes. Opus correctly described the circle and the square as <strong>filled</strong>.</p>
+    <p>Experiment 3 is harder. The model sees only the four middle blocks of a small character-level transformer, with no input or output layer. It must name the training text (Python code, Japanese in romaji, or English) and point out the "copying" heads. I ran two rounds of six conversations each; the second round was decided before seeing any of its results, and both are reported together.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th></th><th class="num">Training text right</th><th class="num">Copying heads exactly right</th></tr></thead>
+      <tbody>
+        <tr><td>Opus 5.5, round 1</td><td class="num">2/6</td><td class="num">3/6</td></tr>
+        <tr><td>Opus 5.5, round 2</td><td class="num">4/6</td><td class="num">3/6</td></tr>
+        <tr><td><strong>Opus 5.5, all 12</strong></td><td class="num"><strong>6/12</strong></td><td class="num"><strong>6/12</strong></td></tr>
+        <tr><td>Astra</td><td class="num">6/6</td><td class="num">6/6</td></tr>
+      </tbody>
+    </table></div>
+    <p>Opus never recognised the romaji network: in all four tries it answered "English" three times and "Python" once. On the Python network it usually named one extra head. It also ran far more code than Astra: 20–60 runs per conversation, against 6–11.</p>
+
+    <h3>Repairing a network (experiment 4)</h3>
+    <p>A trained policy for a physics game gets its car stuck on a ramp and never succeeds. Given all 171,664 weights in one prompt (about 165k tokens), Opus diagnosed the failure and wrote a fix in a single reply. The fix succeeded in <strong>1,024 of 1,024</strong> test episodes, like Astra's. It was also smaller: 37 edit statements changing 2.15 % of the weights, against Astra's 3.54 %.</p>
+
+    <h3>Writing networks from scratch (experiments 5 and 6)</h3>
+    <p>For three MinAtar games, the model writes every weight of a policy network, in one reply, without ever seeing the game played.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Game</th><th class="num">Opus 5.5</th><th class="num">Astra</th><th class="num">PPO, 100M steps</th><th class="num">PPO, 500M steps</th></tr></thead>
+      <tbody>
+        <tr><td>Breakout</td><td class="num">57.4</td><td class="num win">517.4</td><td class="num">15.8</td><td class="num">25.3</td></tr>
+        <tr><td>Seaquest</td><td class="num">8.6</td><td class="num">53.1</td><td class="num">5.6</td><td class="num win">88.9</td></tr>
+        <tr><td>Asterix</td><td class="num win">72.0</td><td class="num">53.2</td><td class="num">25.8</td><td class="num">55.2</td></tr>
+      </tbody>
+    </table></div>
+    <p class="cap">Mean score over 1,000 episodes. The PPO figures are the original's trained baselines.</p>
+    <p>Opus reasoned far longer than Astra here: 90–205k output tokens per game, against about 23k.</p>
+    <p>In Go, the model writes a 1.5-million-weight network. It gets a budget of 0, 10, 25 or 50 "passes" in which it can watch its network play or inspect its outputs.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Passes</th><th class="num">Opus 5.5</th><th class="num">Astra</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td class="num win">65.6 %</td><td class="num">37.5 %</td></tr>
+        <tr><td>10</td><td class="num win">67.9 %</td><td class="num">62.8 %</td></tr>
+        <tr><td>25</td><td class="num win">63.4 %</td><td class="num">54.7 %</td></tr>
+        <tr><td>50</td><td class="num">58.1 %</td><td class="num win">78.4 %</td></tr>
+      </tbody>
+    </table></div>
+    <p class="cap">Win rate against the hidden PPO opponents (2,000 games each). Astra's released networks were re-scored against the same opponents.</p>
+    <p>With no feedback at all, Opus wrote a much stronger network than Astra. It also beat all three PPO networks of the same size, which were each trained on 20 million games. But Opus did not get better with more feedback, while Astra kept improving. By 50 passes, Astra is clearly ahead.</p>
+
+    <h3>Auditing a model (experiment 7)</h3>
+    <p>Two copies of Gemma 3 270M are fine-tuned identically, except that one learns to repeat the user's guess. The model must say which is which. It is first given only the weights, and in a final round an attention tool as well.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Round</th><th class="num">Opus 5.5</th><th class="num">Astra</th></tr></thead>
+      <tbody>
+        <tr><td>Weights only, 1</td><td class="num">1/3</td><td class="num">1/3 (undecided)</td></tr>
+        <tr><td>Weights only, 2</td><td class="num">0/3</td><td class="num">1/3 (undecided)</td></tr>
+        <tr><td>Weights only, 3</td><td class="num">3/3</td><td class="num">1/3 (undecided)</td></tr>
+        <tr><td>Weights only, 4</td><td class="num">3/3</td><td class="num">1/1 scored</td></tr>
+        <tr><td>Attention tool</td><td class="num win">3/3, Brier 0.001</td><td class="num">3/3, Brier 0.071</td></tr>
+      </tbody>
+    </table></div>
+    <p>From weights alone, Astra stayed at 50/50. Opus always committed to an answer: it was confidently wrong in the first two rounds and right on all six pairs in the last two, all on the same models. That instability is the main finding for this experiment. With the attention tool, Opus was right on every pair and near-certain.</p>
+
+    <h2 id="harness"><span class="n">05</span>When the harness changes the outcome</h2>
+    <p>The most practical lesson concerns the plumbing around the model, not the model itself.</p>
+    <ul>
+      <li><strong>Automatic continuation.</strong> When a reply hits the 128k output limit, Claude Code sends the model, on its own, <em>"Output token limit hit. Resume directly…"</em>, and the reply continues in a fresh window. I found no setting to disable it. It happened six times. Once, it ended badly: after a continuation, Opus gave a final answer while claiming its code outputs "were lost when the output limit cut off". It had never run any code.</li>
+      <li><strong>Tool calls written as text.</strong> In one conversation, the first reply was 91k characters of tool-call markup instead of a Python block. No tools existed and nothing ran, but under the protocol a reply with no code block counts as the final answer, so the conversation was lost.</li>
+      <li><strong>Reasoning does not carry across turns.</strong> In later turns the model sees what it wrote, not what it thought. The original post does not say how Codex handled this.</li>
+    </ul>
+    <p>None of this is about weight-space reasoning as such, but each one changed a measured result. Anyone building a benchmark for this kind of work should state output limits and how reasoning carries across turns. They should also detect injected continuations and decide in advance how to treat replies that contain tool markup.</p>
+
+    <h2 id="meaning"><span class="n">06</span>What it suggests</h2>
+    <p><strong>What seems to carry across model families:</strong> reading networks with clear structure, targeted repair, writing a strong network from a good design, and auditing with activation access.</p>
+    <p><strong>What looks less robust:</strong> identifying a training corpus from the middle layers, writing high-scoring game policies, and improving steadily from feedback. Calibration also differed. Opus was <em>less</em> confident than Astra when it was right on the reading tasks, but <em>over</em>-confident when it was wrong in the weights-only audits.</p>
+    <p>So the "sparks" are real, but uneven. The abilities that transfer are the ones where a careful design can be reasoned out directly from the weights.</p>
+
+    <h2 id="limits"><span class="n">07</span>Limitations</h2>
+    <ul>
+      <li><strong>Sample size:</strong> mostly one run per condition. Experiment 3 has two rounds.</li>
+      <li><strong>One model, one effort plan.</strong> Effort levels mean different things across vendors.</li>
+      <li><strong>Rebuilt components:</strong> the Go opponents (about 6 points too strong) and the Gemma fine-tunes. Opus was tested on my versions; Astra was tested on the originals.</li>
+      <li><strong>A different interface</strong> (Claude Code instead of Codex). It adds about 650 tokens of its own context, and it continues long replies automatically.</li>
+      <li><strong>Experiment 8 was not run.</strong></li>
+      <li><strong>Consumer hardware without error-correcting memory.</strong> Every input was checksum-verified before each experiment, and no errors were detected during the runs.</li>
+    </ul>
+    <p>All 26 differences from the original are listed, with reasons, in the study notes that come with the data.</p>
+
+    <h2 id="data"><span class="n">08</span>Data, code and citation</h2>
+    <p>The full release (about 220 MB) includes the harness, every conversation, every network Opus wrote, the rebuilt Go opponents and the validation results. It uses the same folder layout as the original logs, so the two can be compared side by side. The cost was about $269 in API-equivalent terms, or 21 hours of model time.</p>
+    <div class="note"><b>Release:</b> the data and code repository is being prepared and will be linked here. Logs, data and networks are released under CC BY 4.0; the code under MIT.</div>
+    <p>If you use this study, please cite the original work too:</p>
+<pre><code>@misc{takehi2026weightspace,
+  title  = {{Sparks of Weight-Space Programming: LLMs can natively read \&amp; write neural network weights}},
+  author = {Takehi, Rikiya and Teoh, Jayden and Zhang, Alex and Khattab, Omar},
+  year   = {2026}, month = nov,
+  howpublished = {\url{https://rikiyat.github.io/blog/weight-space-programming/}}
+}
+
+@misc{belostecinic2026sparksreplication,
+  title  = {{Replicating Sparks of Weight-Space Programming with Claude Opus 5.5}},
+  author = {Belostecinic, Alexandre},
+  year   = {2026},
+  howpublished = {\url{https://sir-olexander.github.io/research/weight-space-programming-claude/}}
+}</code></pre>
+    <p>Thanks to the original authors for releasing their complete logs. This replication would not have been possible without them.</p>
+  </div>
+</article>
+</div>
+  <footer class="footer mono"><span>© <span id="year">2026</span> Alexandre Belostecinic</span><a href="https://github.com/Sir-Olexander" target="_blank" rel="noopener">github.com/Sir-Olexander ↗</a></footer>
+</main>
+</body>
+</html>
